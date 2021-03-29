@@ -4,7 +4,7 @@ A terminal based flash card REPL.
 BashFlash uses CMake, so be sure to have this installed.
 To build, run the following commands:
 ```bash
-# If you cmake is not installed
+# If cmake is not installed
 sudo apt-get update
 sudo apt-get install cmake
 # Building bashflash
