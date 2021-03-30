@@ -10,6 +10,7 @@
 #include <chrono>
 #include <cctype>
 #include <locale>
+#include <iomanip>
 
 
 // TODO: Implement exception handling for file IO
@@ -36,13 +37,14 @@ bool csv_to_vector (std::vector<std::pair<std::string,std::string>>& vec, const 
 // TODO: Finish defining main
 int main(int argc, char** argv) {
   
+
   std::string file_path(argv[1]);
   std::vector<std::pair<std::string,std::string>> question_vec;
   std::vector<std::tuple<std::string,std::string,std::string>> wrong_answers;
   std::string answer;
   bool shuffle;
 
-  std::cout << "\n\n\t> Welcome to BashFlash.";
+  std::cout << "\n\n\t===== Welcome to BashFlash ======";
   std::cout << "\n\n\t> File Provided: " << file_path;
   std::cout << "\n\n\t> Do you want to shuffle the deck?\n" << "\n\n\t(yes/no): ";
   while (true) {
@@ -57,7 +59,11 @@ int main(int argc, char** argv) {
     }
     else
       std::cout << "\n\t> Please answer yes or no: ";
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
   }
+  std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+
+
 
   std::future<bool> file_read_success = std::async(std::launch::async, &csv_to_vector, std::ref(question_vec), std::ref(file_path), shuffle);
 
@@ -71,28 +77,30 @@ int main(int argc, char** argv) {
       return 0;
     else
       std::cout << "\n\t> Please answer yes or no: ";
-    std::cin.clear();
-    std::cin.ignore(std::numeric_limits<std::streamsize>::max());
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(),'\n');
   }
+  std::cin.ignore(std::numeric_limits<std::streamsize>::max(),'\n');
+
 
   if(!file_read_success.get()) {
     std::cerr << "\n\t> ERROR: Could not read file\n\n> EXITING\n" << std::endl;
     return -1;
   }
 
-  std::cout << "\t> Let's begin...\n\n";
+  std::cout << "\t> Let's begin...\n\n\t========================================\n";
 
   unsigned short total = 0;
   unsigned short correct = 0;
 
   for (std::pair<std::string,std::string> prompt_answer : question_vec) {
-
+    std::string input;
     std::cout << "\n\t" << total+1 << ". "  << prompt_answer.first <<
       "\n\tanswer: ";
-    std::cin >> answer;
+    std::getline(std::cin,input);
+
     
     std::string lowercase_correct_answer = prompt_answer.second;
-    std::string lowercase_user_answer = answer;
+    std::string lowercase_user_answer = input;
     std::transform(lowercase_correct_answer.begin(), lowercase_correct_answer.end(), lowercase_correct_answer.begin(), [](char c){return static_cast<char>(std::tolower(c));});
     std::transform(lowercase_user_answer.begin(), lowercase_user_answer.end(), lowercase_user_answer.begin(), [](char c){return static_cast<char>(std::tolower(c));});
 
@@ -103,15 +111,20 @@ int main(int argc, char** argv) {
     if (lowercase_user_answer == lowercase_correct_answer)
       correct++;
     else
-      wrong_answers.push_back(std::make_tuple(prompt_answer.first, prompt_answer.second, answer));
+      wrong_answers.push_back(std::make_tuple(prompt_answer.first, prompt_answer.second, input));
+
+#ifdef DEBUG
+    std::cout << "(DEBUG Input: " << input << ')' << std::endl;
+#endif
 
     total++;
-    std::cin.clear();
-    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');  
   }
 
-  std::cout << "\n\t=== Results ===\n";
-  std::cout << "\tCorrect: " << correct << "\n\tTotal: " << total << '\n' << std::endl;
+  std::cout << "\n\t===== Results =====\n";
+  std::cout << "\tCorrect: " << correct << "\n\tTotal: " << total << '\n' 
+    << "\tPercentage: " << std::setprecision(4) << (correct/(total * 1.0f)) 
+    << '\n' << std::endl;
+  
   std::cout << "\n\tQuestions you missed:\n";
 
   if (argc == 3) {
